@@ -7,14 +7,14 @@ const UserSchema = new mongoose.Schema(
         email: { type: String, unique: true },
         password: { type: String },
         name: { type: String },
-        shortBio: { type: String },
-        fullBio: { type: String },
-        github: { type: String },
-        instagram: { type: String },
-        twitter: { type: String },
-        linkedin: { type: String },
-        website: { type: String },
         resetPasswordLink: { type: String },
+        portfolios: {
+            type: [
+                {
+                    type: mongoose.Schema.Types.ObjectId, ref: 'Portfolio'
+                }
+            ]
+        }
     },
     { timestamps: true }
 );

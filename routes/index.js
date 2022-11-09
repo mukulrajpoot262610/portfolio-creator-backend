@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const authController = require("../controllers/auth-controller");
+const userController = require("../controllers/user-controller");
 const authMiddleware = require("../middlewares/auth-middleware");
 
 // AUTH
@@ -11,5 +12,8 @@ router.post("/api/reset-password", authController.resetPassword);
 router.get("/api/refresh", authController.refresh);
 router.post("/api/logout", authMiddleware, authController.logout);
 router.get("/api/get-user-details", authMiddleware, authController.getUserDetails);
+
+// DOMAIN
+router.post("/api/check-domain", authMiddleware, userController.checkDomain)
 
 module.exports = router;

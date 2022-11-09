@@ -3,6 +3,22 @@ const bcrypt = require("bcrypt");
 const tokenService = require("../services/token-service");
 const userService = require("../services/user-service");
 const emailService = require("../services/email-service");
+const { default: hashService } = require("../services/hash-service");
+const APIResponse = require('../helpers/APIResponse')
+
+function setTokensInCookie(res, token) {
+    // put it in cookie
+    res.cookie("metrackAccessCookie", token.accessToken, {
+        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+        httpOnly: true,
+    });
+
+    res.cookie("metrackRefreshCookie", token.refreshToken, {
+        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+        httpOnly: true,
+    });
+}
+
 
 class AuthController {
     async sendVerificationLink(req, res) {
@@ -35,53 +51,47 @@ class AuthController {
     }
 
     async registerUser(req, res) {
-        const { token } = req.body;
-
-        if (!token) {
-            return res.status(400).json({ msg: "All Fields are required" });
-        }
+        const { name, email, password } = req.body;
 
         try {
-            const { email, password, name } =
-                await tokenService.verifyActivationToken(token);
-
             let user = await userService.findUser({ email });
 
             if (user) {
-                return res.status(400).json({ msg: "User Already Exists" });
+                return APIResponse.validationError(res, "user already exists");
             }
 
-            if (!user) {
-                user = await userService.createUser({ email, name, password });
-            }
+            user = await userService.createUser({
+                name,
+                email,
+                password,
+            });
 
-            // token
+            // generate new token
             const { accessToken, refreshToken } = tokenService.generateToken({
                 _id: user._id,
-                activated: false,
+                role: user.role,
             });
 
-            await tokenService.storeRefreshToken(refreshToken, user._id);
+            // save refresh token in db
+            const savedToken = tokenService.storeRefreshToken(
+                user._id,
+                refreshToken
+            );
+            if (!savedToken) {
+                return APIResponse.errorResponse(res);
+            }
 
-            res.cookie("accessCookie", accessToken, {
-                maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
-                httpOnly: true,
-            });
+            setTokensInCookie(res, { accessToken, refreshToken });
 
-            res.cookie("refreshCookie", refreshToken, {
-                maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
-                httpOnly: true,
-            });
-
-            user.isEmailVerified = true;
-            user.save();
-
-            res.status(200).json({ activated: true, user });
+            user.password = "";
+            return APIResponse.successResponseWithData(
+                res,
+                user,
+                "account created"
+            );
         } catch (err) {
-            console.log(err.message);
-            return res
-                .status(500)
-                .json({ msg: "Internal Server Error", err: err.message });
+            console.log(err);
+            return APIResponse.errorResponse(res);
         }
     }
 

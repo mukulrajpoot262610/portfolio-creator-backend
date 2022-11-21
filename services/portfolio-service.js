@@ -7,9 +7,9 @@ class PortfolioService {
         return domain;
     }
 
-    async getAllUser() {
-        const users = await PortfolioModel.find();
-        return users;
+    async getAllPortfolio({ filter }) {
+        const portfolio = await PortfolioModel.find(filter);
+        return portfolio;
     }
 
     async createPortfolio(data) {

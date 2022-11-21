@@ -15,5 +15,8 @@ router.get("/api/get-user-details", authMiddleware, authController.getUserDetail
 
 // DOMAIN
 router.post("/api/check-domain", authMiddleware, userController.checkDomain)
+router.post("/api/create-website", authMiddleware, userController.buildPortfolio)
+router.get("/api/get-all-domains", authMiddleware, userController.getAllPortfolios)
+router.post("/api/get-domain", userController.getPortfolio)
 
 module.exports = router;

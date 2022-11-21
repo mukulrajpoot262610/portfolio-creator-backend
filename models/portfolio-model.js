@@ -14,6 +14,8 @@ const PortfolioSchema = new mongoose.Schema(
         email: { type: String },
         phone: { type: String },
         github: { type: String },
+        linkedin: { type: String },
+        twitter: { type: String },
         leetcode: { type: String },
     },
     { timestamps: true }
